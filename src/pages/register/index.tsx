@@ -1,7 +1,14 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { auth } from "../../services/firebaseConnection";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signOut,
+} from "firebase/auth";
 import logoImg from "../../assets/logo.svg";
 import { Container } from "../../components/container";
 import { Input } from "../../components/input";
@@ -21,6 +28,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export const Register = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -30,8 +38,25 @@ export const Register = () => {
     mode: "onChange",
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log(data);
+  useEffect(() => {
+    const handleLogout = async () => {
+      await signOut(auth);
+    };
+    handleLogout();
+  }, []);
+
+  const onSubmit = async (data: FormData) => {
+    createUserWithEmailAndPassword(auth, data.email, data.password)
+      .then(async (user) => {
+        await updateProfile(user.user, {
+          displayName: data.name,
+        });
+        console.log("Cadastrado com sucesso!");
+        navigate("/dashboard", { replace: true });
+      })
+      .catch((error) =>
+        console.log(`Erro ao cadastrar este usuário: ${error}`)
+      );
   };
 
   return (
@@ -76,7 +101,7 @@ export const Register = () => {
             className="bg-zinc-900 w-full rounded-md text-white h-10 font-medium"
             type="submit"
           >
-            Acessar
+            Cadastrar
           </button>
         </form>
 
