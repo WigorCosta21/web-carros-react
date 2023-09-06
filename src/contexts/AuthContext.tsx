@@ -5,6 +5,8 @@ import { auth } from "../services/firebaseConnection";
 type AuthContextData = {
   signed: boolean;
   loadingAuth: boolean;
+  handleInfoUser: ({ name, email, uid }: UserProps) => void;
+  user: UserProps | null;
 };
 
 interface AuthProviderProps {
@@ -43,8 +45,18 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     };
   }, []);
 
+  const handleInfoUser = ({ name, email, uid }: UserProps) => {
+    setUser({
+      name,
+      email,
+      uid,
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ signed: !!user, loadingAuth }}>
+    <AuthContext.Provider
+      value={{ signed: !!user, loadingAuth, handleInfoUser, user }}
+    >
       {children}
     </AuthContext.Provider>
   );

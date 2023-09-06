@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -12,6 +12,7 @@ import {
 import logoImg from "../../assets/logo.svg";
 import { Container } from "../../components/container";
 import { Input } from "../../components/input";
+import { AuthContext } from "../../contexts/AuthContext";
 
 const schema = z.object({
   name: z.string().nonempty("O campo nome é obrigatório"),
@@ -28,6 +29,8 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export const Register = () => {
+  const { handleInfoUser } = useContext(AuthContext);
+
   const navigate = useNavigate();
   const {
     register,
@@ -51,6 +54,12 @@ export const Register = () => {
         await updateProfile(user.user, {
           displayName: data.name,
         });
+        handleInfoUser({
+          name: data.name,
+          email: data.email,
+          uid: user.user.uid,
+        });
+
         console.log("Cadastrado com sucesso!");
         navigate("/dashboard", { replace: true });
       })
