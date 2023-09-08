@@ -1,10 +1,21 @@
+import { ChangeEvent, useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FiUpload } from "react-icons/fi";
+import { FiUpload, FiTrash } from "react-icons/fi";
+import { v4 as uuidV4 } from "uuid";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+
 import { Container } from "../../../components/container";
 import { DashboardHeader } from "../../../components/painelHeader";
 import { Input } from "../../../components/input";
+import { AuthContext } from "../../../contexts/AuthContext";
+import { storage } from "../../../services/firebaseConnection";
 
 const schema = z.object({
   name: z.string().nonempty("O nome é obrigatório"),
@@ -24,7 +35,16 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+interface ImageItemProps {
+  uid: string;
+  name: string;
+  previewUrl: string;
+  url: string;
+}
+
 export const New = () => {
+  const { user } = useContext(AuthContext);
+
   const {
     register,
     handleSubmit,
@@ -35,14 +55,66 @@ export const New = () => {
     mode: "onChange",
   });
 
+  const [carImage, setCarImage] = useState<ImageItemProps[]>([]);
+
   const onSubmit = (data: FormData) => {
     console.log(data);
+  };
+
+  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const image = e.target.files[0];
+
+      if (image.type === "image/jpeg" || image.type === "image/png") {
+        await hadleUpload(image);
+      } else {
+        alert("Envie uma imagem jpeg ou png!");
+        return;
+      }
+    }
+  };
+
+  const hadleUpload = (image: File) => {
+    if (!user?.uid) {
+      return;
+    }
+
+    const currentUid = user?.uid;
+    const uidImage = uuidV4();
+
+    const uploadRef = ref(storage, `images/${currentUid}/${uidImage}`);
+
+    uploadBytes(uploadRef, image).then((snapshot) => {
+      getDownloadURL(snapshot.ref).then((downloadUrl) => {
+        const imageItem = {
+          name: uidImage,
+          uid: currentUid,
+          previewUrl: URL.createObjectURL(image),
+          url: downloadUrl,
+        };
+
+        setCarImage((images) => [...images, imageItem]);
+      });
+    });
+  };
+
+  const handleDeleteImage = async (item: ImageItemProps) => {
+    const imagePath = `images/${item.uid}/${item.name}`;
+
+    const imageRef = ref(storage, imagePath);
+
+    try {
+      await deleteObject(imageRef);
+      setCarImage(carImage.filter((car) => car.url !== item.url));
+    } catch (err) {
+      console.log(`Erro ao deletar: ${err}`);
+    }
   };
 
   return (
     <Container>
       <DashboardHeader />
-      <div className="w-full bg-white p-3 rounded-lg flex flex-col sm: flex-row items-center gap-2">
+      <div className="w-full bg-white p-3 rounded-lg flex flex-col sm:flex-row items-center gap-2">
         <button className="border-2 w-48 rounded-lg flex items-center justify-center cursor-pointer border-gray-600 h-32">
           <div className="absolute cursor-pointer">
             <FiUpload size="30" color="#000" />
@@ -52,9 +124,29 @@ export const New = () => {
               className="opacity-0 cursor-pointer"
               type="file"
               accept="image/*"
+              onChange={handleFile}
             />
           </div>
         </button>
+
+        {carImage.map((item) => (
+          <div
+            className="w-full h-32 flex items-center justify-center relative"
+            key={item.name}
+          >
+            <button
+              className="absolute"
+              onClick={() => handleDeleteImage(item)}
+            >
+              <FiTrash size="28" color="#fff" />
+            </button>
+            <img
+              className="rounded-lg w-full h-32 object-cover"
+              src={item.previewUrl}
+              alt="Foto do carro"
+            />
+          </div>
+        ))}
       </div>
 
       <div className="w-full bg-white p-3 rounded-lg flex flex-col sm:flex-row items-center gap-2 mt-2">
