@@ -1,6 +1,57 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { collection, query, getDocs, orderBy } from "firebase/firestore";
+
 import { Container } from "../../components/container";
+import { db } from "../../services/firebaseConnection";
+
+interface CarsProps {
+  id: string;
+  name: string;
+  year: string;
+  uid: string;
+  price: string | number;
+  city: string;
+  km: string;
+  images: CarImageProps[];
+}
+
+interface CarImageProps {
+  name: string;
+  uia: string;
+  url: string;
+}
 
 export const Home = () => {
+  const [cars, setCars] = useState<CarsProps[]>([]);
+
+  useEffect(() => {
+    const loadCars = () => {
+      const carsRef = collection(db, "cars");
+      const queryRef = query(carsRef, orderBy("created", "desc"));
+
+      getDocs(queryRef).then((snapshot) => {
+        let listCars = [] as CarsProps[];
+
+        snapshot.forEach((doc) => {
+          listCars.push({
+            id: doc.id,
+            name: doc.data().name,
+            year: doc.data().year,
+            km: doc.data().km,
+            city: doc.data().city,
+            price: doc.data().price,
+            images: doc.data().images,
+            uid: doc.data().uid,
+          });
+        });
+        setCars(listCars);
+      });
+    };
+
+    loadCars();
+  }, []);
+
   return (
     <Container>
       <section className="bg-white p-4 rounded-lg w-full max-w-3xl mx-auto flex justify-center items-center gap-2">
@@ -18,27 +69,31 @@ export const Home = () => {
       </h1>
 
       <main className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <section className="w-full bg-white rounded-lg">
-          <img
-            className="w-full rounded-lg mb-2 max-h-72 hover:scale-105 transition-all"
-            src="https://image.webmotors.com.br/_fotos/anunciousados/gigante/2023/202308/20230826/ford-territory-1.5-ecoboost-gtdi-gasolina-sel-automatico-wmimagem07312581033.jpg?s=fill&w=552&h=414&q=60"
-            alt="Carro"
-          />
-          <p className="font-bold mt-1 mb-2 px-2">FORD TERRITORY</p>
+        {cars.map((car) => (
+          <Link key={car.id} to={`/car/${car.id}`}>
+            <section className="w-full bg-white rounded-lg">
+              <img
+                className="w-full rounded-lg mb-2 max-h-72 hover:scale-105 transition-all"
+                src={car.images[0].url}
+                alt="Carro"
+              />
+              <p className="font-bold mt-1 mb-2 px-2">{car.name}</p>
 
-          <div className="flex flex-col px-2">
-            <span className="text-zinc-700 mb-6">
-              Ano 2016/2016 | 23.000 km
-            </span>
-            <strong className="text-black font-medium text-xl">
-              R$ 190.000
-            </strong>
-            <div className="w-full h-px bg-slate-200 my-2"></div>
-            <div className="px-2 pb-2">
-              <span className="text-black">São Paulo - SP</span>
-            </div>
-          </div>
-        </section>
+              <div className="flex flex-col px-2">
+                <span className="text-zinc-700 mb-6">
+                  Ano {car.year} | {car.km} km
+                </span>
+                <strong className="text-black font-medium text-xl">
+                  R$ {car.price}
+                </strong>
+                <div className="w-full h-px bg-slate-200 my-2"></div>
+                <div className="px-2 pb-2">
+                  <span className="text-black">{car.city}</span>
+                </div>
+              </div>
+            </section>
+          </Link>
+        ))}
       </main>
     </Container>
   );

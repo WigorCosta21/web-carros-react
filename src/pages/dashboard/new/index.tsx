@@ -10,12 +10,13 @@ import {
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
+import { addDoc, collection } from "firebase/firestore";
 
 import { Container } from "../../../components/container";
 import { DashboardHeader } from "../../../components/painelHeader";
 import { Input } from "../../../components/input";
 import { AuthContext } from "../../../contexts/AuthContext";
-import { storage } from "../../../services/firebaseConnection";
+import { storage, db } from "../../../services/firebaseConnection";
 
 const schema = z.object({
   name: z.string().nonempty("O nome é obrigatório"),
@@ -58,7 +59,39 @@ export const New = () => {
   const [carImage, setCarImage] = useState<ImageItemProps[]>([]);
 
   const onSubmit = (data: FormData) => {
-    console.log(data);
+    if (carImage.length === 0) {
+      alert("Envie alguma imagem deste carro");
+      return;
+    }
+
+    const carListImage = carImage.map((car) => {
+      return {
+        uid: car.uid,
+        name: car.name,
+        url: car.url,
+      };
+    });
+
+    addDoc(collection(db, "cars"), {
+      name: data.name,
+      model: data.model,
+      whatapp: data.whatsapp,
+      city: data.city,
+      year: data.year,
+      km: data.km,
+      price: data.price,
+      description: data.price,
+      created: new Date(),
+      owner: user?.name,
+      uid: user?.uid,
+      images: carListImage,
+    })
+      .then(() => {
+        reset();
+        setCarImage([]);
+        console.log("Cadastrado cm sucesso!");
+      })
+      .catch((err) => console.log(`Erro ao cadastrar no banco: ${err}`));
   };
 
   const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
