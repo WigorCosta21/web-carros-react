@@ -84,8 +84,6 @@ In this section, you'll find images that showcase the layout and appearance of t
 
 ![Car Detail Page](https://github.com/WigorCosta21/servidor_estaticos/blob/main/car-detail.jpg?raw=true)
 
-Please make sure to replace the image URLs in the example with the actual URLs of the images you want to include. This will provide readers of the README with a clear idea of the design and layout of the project.
-
 ## Directory Structure
 
 Here's the directory structure of your project:
