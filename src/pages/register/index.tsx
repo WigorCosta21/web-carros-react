@@ -3,12 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { auth } from "../../services/firebaseConnection";
+import toast from "react-hot-toast";
 import {
   createUserWithEmailAndPassword,
   updateProfile,
   signOut,
 } from "firebase/auth";
+
+import { auth } from "../../services/firebaseConnection";
 import logoImg from "../../assets/logo.svg";
 import { Container } from "../../components/container";
 import { Input } from "../../components/input";
@@ -60,7 +62,7 @@ export const Register = () => {
           uid: user.user.uid,
         });
 
-        console.log("Cadastrado com sucesso!");
+        toast.success("Bem vindo ao webcarros!");
         navigate("/dashboard", { replace: true });
       })
       .catch((error) =>

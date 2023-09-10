@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import AuthProvider from "./contexts/AuthContext";
 import { register } from "swiper/element/bundle";
+import { Toaster } from "react-hot-toast";
 import { router } from "./App";
 import "./index.css";
 
@@ -14,6 +15,7 @@ import "swiper/css/scrollbar";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
+    <Toaster position="top-right" reverseOrder={false} />
     <AuthProvider>
       <RouterProvider router={router} />
     </AuthProvider>

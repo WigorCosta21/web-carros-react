@@ -4,6 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FiUpload, FiTrash } from "react-icons/fi";
 import { v4 as uuidV4 } from "uuid";
+import toast from "react-hot-toast";
 import {
   ref,
   uploadBytes,
@@ -60,7 +61,7 @@ export const New = () => {
 
   const onSubmit = (data: FormData) => {
     if (carImage.length === 0) {
-      alert("Envie alguma imagem deste carro");
+      toast.error("Envie pelo menos 1 imagem");
       return;
     }
 
@@ -73,7 +74,7 @@ export const New = () => {
     });
 
     addDoc(collection(db, "cars"), {
-      name: data.name,
+      name: data.name.toUpperCase(),
       model: data.model,
       whatsapp: data.whatsapp,
       city: data.city,
@@ -89,7 +90,7 @@ export const New = () => {
       .then(() => {
         reset();
         setCarImage([]);
-        console.log("Cadastrado cm sucesso!");
+        toast.success("Carro cadastrado com sucesso!");
       })
       .catch((err) => console.log(`Erro ao cadastrar no banco: ${err}`));
   };
